@@ -1,0 +1,9 @@
+{"message":"Bookmark with id hello not found.","level":"error"}
+{"message":"Bookmark with id f3253db1-ff4d-4b3d-a675-aaf7e2de00b4 created.","level":"info"}
+{"message":"Description required","level":"error"}
+{"message":"Rating required","level":"error"}
+{"message":"Rating required","level":"error"}
+{"message":"Title required","level":"error"}
+{"message":"Bookmark with id 8a9bb90b-0333-464d-8d1d-84ef1d6b9ff8 created.","level":"info"}
+{"message":"Bookmark with id 0 deleted.","level":"info"}
+{"message":"Bookmark with id asdgasdg not found.","level":"error"}
