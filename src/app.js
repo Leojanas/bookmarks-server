@@ -7,6 +7,7 @@ const {NODE_ENV} = require('./config')
 const winston = require('winston')
 const {v4: uuid} = require('uuid')
 const {bookmarks} = require('./store')
+const BookmarksService = require('./bookmarks-service')
 
 const app = express()
 
@@ -28,39 +29,47 @@ const morganOption = (NODE_ENV === 'production')
   ? 'tiny'
   : 'common';
 
+
 app.use(morgan(morganOption))
 app.use(helmet())
 app.use(cors())
 app.use(express.json())
 
-app.use(function validateBearerToken(req, res, next) {
+/*app.use(function validateBearerToken(req, res, next) {
   const apiToken = process.env.API_TOKEN
   const authToken = req.get('Authorization')
 
   if (!authToken || authToken.split(' ')[1] !== apiToken) {
     return res.status(401).json({ error: 'Unauthorized request' })
   }
-  // move to the next middleware
   next()
-})
+})*/
 
 app.get('/', (req,res)=>{
     res.send('Hello, world!')
 })
 
-app.get('/bookmarks', (req,res)=>{
-    res.json(bookmarks)
+app.get('/bookmarks', (req,res, next)=>{
+  const knexInstance = req.app.get('db');
+    BookmarksService.getAllBookmarks(knexInstance)
+      .then(bookmarks => {
+        res.json(bookmarks)
+      })
+      .catch(next)
 })
 
-app.get('/bookmarks/:id', (req,res)=>{
+app.get('/bookmarks/:id', (req,res, next)=>{
   const {id} = req.params;
-  const bookmark = bookmarks.find(b=> b.id == id);
-
-  if(!bookmark){
-    logger.error(`Bookmark with id ${id} not found.`)
-    return res.status(404).json({"error": "Not Found"})
-  }
-  res.json(bookmark)
+  const knexInstance = req.app.get('db')
+  BookmarksService.getBookmarkById(knexInstance, id)
+    .then(bookmark => {
+      if(!bookmark){
+        logger.error(`Bookmark with id ${id} not found.`)
+        return res.status(404).json({"error": "Not Found"})
+      }
+      res.json(bookmark)
+    })
+    .catch(next)
 })
 
 app.post('/bookmarks', (req,res)=>{
