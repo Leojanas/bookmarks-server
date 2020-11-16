@@ -3,6 +3,7 @@ const bookmarksService = require('./bookmarks-service')
 const logger = require('../src/logger')
 const xss = require('xss')
 const { isWebUri } = require('valid-url')
+const path = require('path')
 
 const bookmarksRouter = express.Router()
 const bodyParser = express.json()
@@ -16,7 +17,7 @@ const sanitizeBookmark = bookmark => ({
 })
 
 bookmarksRouter
-    .route('/bookmarks')
+    .route('/')
     .get((req,res, next) => {
         bookmarksService.getAllBookmarks(req.app.get('db'))
             .then(bookmarks => {
@@ -53,14 +54,14 @@ bookmarksRouter
                 logger.info(`Bookmark with id ${bookmark.id} created.`)
                 res
                     .status(201)
-                    .location(`bookmarks/${bookmark.id}`)
+                    .location(path.posix.join(req.originalUrl, `/${bookmark.id}`))
                     .json(sanitizeBookmark(bookmark))
             })
             .catch(next)
     })
 
 bookmarksRouter
-    .route('/bookmarks/:id')
+    .route('/:id')
     .all((req,res,next) => {
         const {id} = req.params
         bookmarksService.getBookmarkById(req.app.get('db'), id)
@@ -86,8 +87,20 @@ bookmarksRouter
             })
             .catch(next)
     })
-    /*.put(bodyParser, (req, res, next) => {
-
-    })*/
+    .patch(bodyParser, (req, res, next) => {
+        const {title, url, description, rating} = req.body
+        const updates = {title, url, description, rating}
+        const numberOfFields = Object.values(updates).filter(Boolean).length
+        if(numberOfFields == 0){
+            return res.status(400).json({
+                error: {message: 'Invalid data, must contain fields to update.'}
+            })
+        }
+        bookmarksService.updateBookmark(req.app.get('db'), req.params.id, updates)
+            .then(() => {
+                logger.info(`Bookmark with id ${req.params.id} updated.`)
+                res.status(204).end()
+            })
+    })
 
 module.exports = bookmarksRouter

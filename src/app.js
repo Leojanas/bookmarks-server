@@ -20,7 +20,7 @@ app.use(cors())
 //app.use(ValidateBearerToken)
 app.use(express.json())
 
-app.use(bookmarksRouter)
+app.use('/api/bookmarks', bookmarksRouter)
 
 app.use(function errorHandler(error, req, res, next) {
    let response
